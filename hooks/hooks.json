@@ -1,0 +1,16 @@
+{
+  "description": "agent-team hooks: enforce files-scope on write operations",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/files-scope-guard.py"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "agent-team",
+  "version": "0.1.10",
+  "description": "通用、配置驱动的 agent 团队：主会话扮演 Coordinator/Scheduler/Mediator（skill），动态调度项目级 .claude/agents/ 业务 subagent。支持 development/content/research/office 四种场景，DAG 依赖调度 + 失败重试 + PublishCandidate 审核流。",
+  "author": {
+    "name": "agent-team",
+    "email": "lzc900619@gmail.com"
+  }
+}
