@@ -1,5 +1,5 @@
 {
-  "description": "agent-team hooks（真实代码强制层，非 prompt 指令）：(1) strict files-scope 守卫；(2) office 写前快照；(3) directory-fork 运行时证据留痕",
+  "description": "agent-team hooks（真实代码强制层，非 prompt 指令）：(1) strict files-scope 守卫；(2) office 写前快照；(3) directory-fork 运行时证据；(4) git-worktree 运行时证据",
   "hooks": {
     "PreToolUse": [
       {
@@ -12,6 +12,10 @@
           {
             "type": "command",
             "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/fork-evidence-guard.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/worktree-evidence-guard.py"
           },
           {
             "type": "command",

@@ -96,6 +96,9 @@ while 存在 pending 或 in_progress 的子任务:
     for task in ready:
         if context.kind == "development":
             # Agent 工具自动建 worktree，无需预建
+            # 隔离证据（ADR-0055）：subagent 写入 worktree 时，hooks/worktree-evidence-guard.py
+            # 自动把"agent/worktree/分支/文件/真实时间戳"追加到主仓库 .agent-team/evidence/worktrees.jsonl，
+            # 独立于 worktree，accept 删 worktree 也带不走——使隔离事后可验证，无需你介入。
             pass
         elif context.kind in ("content", "research"):
             # directory-fork：创建 fork 目录 + rsync 项目基线
