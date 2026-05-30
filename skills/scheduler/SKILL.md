@@ -104,6 +104,9 @@ while 存在 pending 或 in_progress 的子任务:
             rsync -a --exclude='.agent-team' --exclude='.git' --exclude='node_modules' \
                   {project_dir}/ {fork_dir}/
             # 若有上游产物（depends_on 的 outputs），步骤 4 已 sync，此处不重复
+            # 隔离证据（ADR-0054）：subagent 写入 fork 时，hooks/fork-evidence-guard.py
+            # 会自动把"谁/哪个fork/哪个文件/真实时间戳"追加到 .agent-team/evidence/forks.jsonl。
+            # 该证据独立于 forks/，accept 删 fork 也带不走——使"隔离真发生过"事后可验证，无需你介入。
         elif context.kind == "office":
             # none：写前快照由**真实 hook 自动完成**（ADR-0029 / 诚实复审 item 6）。
             # 不要在这里手写 mkdir/cp ——历史上 LLM 会跳过却谎报成功（空目录+伪造时间戳）。

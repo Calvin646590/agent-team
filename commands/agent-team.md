@@ -45,7 +45,7 @@ allowed-tools: [Read, Write, Edit, Bash, Glob, Grep, Agent, Skill]
 读 `.agent-team/candidate.md` 获取待审 PublishCandidate（schema 详见 `agents/merger.md` 步骤 4，字段含 `quality` / `task_failures` / `integration_errors` / `quality_unknowns` / `artifacts` / `conflicts` / `rollback_hint`）。确认 `quality` 为 `passed`（或用户明确接受 `failed` / `unknown` 风险）；按 `publish_strategy` 执行 apply：
 
 - **`pr-style`**（development）→ `git merge --no-ff` 将整合分支并入目标分支；apply 后删除 integration 分支 + 清理临时 worktree
-- **`overlay`**（content / research）→ 从 `.agent-team/forks/` 中各 fork 取 outputs 声明的文件，覆盖写入主工作区对应路径；旧版文件备份到 `.agent-team/history/<timestamp>/`；apply 后删除 forks 目录
+- **`overlay`**（content / research）→ 从 `.agent-team/forks/` 中各 fork 取 outputs 声明的文件，覆盖写入主工作区对应路径；旧版文件备份到 `.agent-team/history/<timestamp>/`；apply 后**只删 `.agent-team/forks/`**（ADR-0054：**绝不** `rm -rf .agent-team/`——`.agent-team/evidence/forks.jsonl` 是隔离证据，须保留以供事后审计）
 - **`direct`**（office）→ 产物已在项目根目录；若 candidate 含 `external_actions`（如发邮件、写日历）且 `apply_policy != dry-run`，逐条执行并记录结果；`dry-run` 模式下仅标记完成 + 列出"若真执行会做的动作"；apply 后保留 snapshots（供后续回滚）
 
 apply 完成后记 `.agent-team/log.md`（apply 时间 + strategy + 结果）。
