@@ -1,6 +1,6 @@
 {
   "name": "agent-team",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "通用、配置驱动的 agent 团队：主会话扮演 Coordinator/Scheduler/Mediator（skill），动态调度项目级 .claude/agents/ 业务 subagent。支持 development/content/research/office 四种场景，DAG 依赖调度 + 失败重试 + PublishCandidate 审核流。office 写前快照由真实 PreToolUse hook 强制（非 prompt 指令）。",
   "author": {
     "name": "agent-team",

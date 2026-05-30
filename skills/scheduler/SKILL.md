@@ -141,11 +141,13 @@ while 存在 pending 或 in_progress 的子任务:
 
     等全部返回 → 逐个校验 outputs + quality_gate 已写回；各自置 done/failed
 
-    # Wave 并发自检（发出前预检，P2-3 fix）
+    # Wave 派发纪律（ADR-0051：这是行动指令，不是"自检机制"——别假装有验证层在背后兜底）
     if len(ready) > 1:
-        ⚠️ 在发出本轮 Agent 调用 **之前**，确认本条消息中包含 len(ready)={N} 个 Agent 工具调用。
-        若发现遗漏，立即补足——不要先发出再补发（补发会变成下一轮串行，违反 Wave 规则）。
-        发出后记 log.md: "[Wave N] dispatched={len(ready)} tasks: [task_id 列表]"
+        ⚠️ 发出本轮 Agent 调用前，确认本条消息体里**真的**放了 len(ready)={N} 个 Agent 工具调用。
+        遗漏就当场补齐再发；绝不"先发一个、下一轮再补"（那会退化成串行，破坏并行收益）。
+        发出后据实记 log.md（带真实时间戳）: "[YYYY-MM-DDThh:mm:ss] Wave N dispatched {N} tasks: [ids]"
+        # 说明：prompt 驱动下无法在发出后回溯统计自己发了几个调用，所以这是**发出前的纪律**，
+        # 不是发出后的校验。可后验的证据只有 log 时间戳是否真实（见 verify_mechanism.py）。
 
     更新 index.md
     ▶ 状态自检（ADR-0037）：重读 index.md 校验不变量（ready 算对 / 无重复派 / status 合法 / attempts 未越界）；不一致立即纠正 + 记 log
@@ -180,7 +182,10 @@ for upstream_task in task.depends_on:
 agent 失败/超时 → **你先重试**。注：timeout 在 prompt 驱动模式下为**建议性**——无系统计时器；当某任务 in_progress 经多轮循环仍无返回时视为超时。精确 timeout 需代码层（ADR-0037 方案 B）。
 ```
 while attempts < max_attempts(默认3):
-    attempts++; 指数退避(5/10/20s); 重新派 owner（可补上次失败上下文）
+    attempts++; 重新派 owner（务必附上次 last_error 作为上下文，否则大概率重蹈覆辙）
+    # 诚实说明（ADR-0051）：prompt 驱动无系统级定时退避，"重试"= 立即重新派发。
+    # 不要谎称"指数退避 5/10/20s"——那是没有计时器支撑的装饰。
+    # 若 last_error 明显是瞬时问题（限流/网络），可显式用 Bash `sleep N` 插入一次**真实**等待再重派。
     成功→done 退出；失败→继续
 用尽 →
     置 task status: failed（先写回 task 文件 + 更新 index.md，mediator 读到的状态语义才正确）

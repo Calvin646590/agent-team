@@ -2,13 +2,27 @@
 
 通用、配置驱动的 Claude Code agent 团队编排插件。在你的项目里用 `/agent-team:agent-team start <任务>` 启动，多个专业 agent 自动协作、按依赖调度、产出可审核的交付候选。
 
+> ⚠️ **先读这一段，理解它的本质（诚实声明）**
+>
+> agent-team 是一套**提示词驱动的编排脚手架**，不是确定性引擎。下文的"DAG 调度""失败重试"
+> "Wave 并发"等，绝大多数是**写给 LLM 的指令**——主会话 LLM 扮演 Coordinator/Scheduler 去遵循，
+> 而非有代码强制执行。可靠性依赖模型遵从，**不保证每次都严格按描述发生**。
+>
+> 真正由**代码强制**、不依赖 LLM 自觉的只有 hooks：
+> - `hooks/files-scope-guard.py` —— strict 模式下越界写入 deny（需 README 配 `files_scope_enforcement: strict`）
+> - `hooks/office-snapshot-guard.py` —— office 覆盖既有文件前自动写前快照
+>
+> 想验证某次运行是否**真的**按描述执行（而非 LLM 叙述了成功），用机器校验而非读它的 log：
+> `bash pressure-test/verify/run-all.sh`（退出码 0 才算数）。背景见 `docs/16-诚实复审报告`。
+
 ## 核心特性
 
 - **4 种项目场景**：software development / content creation / research / office tasks
-- **DAG 调度**：按依赖顺序自动并发，无依赖的 agent 同一波次并行
+- **DAG 调度**（提示词层）：按依赖顺序自动并发，无依赖的 agent 同一波次并行
 - **隔离策略**：git-worktree（代码）/ directory-fork（内容/调研）/ none（办公）
-- **失败处理**：自动 retry（最多 3 次）→ 超阈值升级给用户选择（retry / swap / skip / takeover）
+- **失败处理**（提示词层）：retry 立即重派并附失败上下文（无系统定时退避）→ 超阈值升级给用户选择（retry / swap / skip / takeover）
 - **审核流**：产物聚合为 PublishCandidate，用户 accept 才真正 apply
+- **真实强制层**（代码）：files-scope strict 守卫 + office 写前快照（PreToolUse hooks）
 
 ---
 

@@ -79,6 +79,29 @@ def extract_write_globs(agent_md_text):
     return None
 
 
+def find_project_root(start):
+    """从 start 向上逐级查找项目根（ADR-0052）。
+    判据：该目录有 README.md 且其中含 `team-config`（agent-team 配置块的标志）。
+    找到即返回；到文件系统根仍未找到返回 None。兼容 worktree / 任意子目录 cwd。
+    """
+    try:
+        cur = os.path.abspath(start)
+    except Exception:
+        return None
+    while True:
+        readme = os.path.join(cur, "README.md")
+        try:
+            with open(readme, "r", encoding="utf-8") as f:
+                if "team-config" in f.read():
+                    return cur
+        except Exception:
+            pass
+        parent = os.path.dirname(cur)
+        if parent == cur:  # 抵达文件系统根
+            return None
+        cur = parent
+
+
 def main():
     raw = sys.stdin.read()
     try:
@@ -96,8 +119,12 @@ def main():
         allow()
 
     cwd = payload.get("cwd") or os.getcwd()
-    # 找项目根：含 README 且 README 里有 team-config 的目录（简化：用 cwd）
-    project_root = cwd
+    # 找项目根（ADR-0052）：从 cwd 向上逐级找"含 .claude/agents/ 的 README.md 所在目录"。
+    # 不能假设 cwd 就是项目根——subagent 的 cwd 可能是 worktree 路径或任意子目录，
+    # 直接用 cwd 会读到错误/缺失的 README，导致 strict 静默 fail-open（唯一真强制形同虚设）。
+    project_root = find_project_root(cwd)
+    if project_root is None:
+        allow()  # 向上都找不到带 team-config 的项目根 → 无从判断，放行
 
     # 仅在 README team-config 显式 strict 时才拦
     readme = os.path.join(project_root, "README.md")
@@ -106,8 +133,8 @@ def main():
             readme_text = f.read()
     except Exception:
         allow()
-    if not re.search(r"files_scope_enforcement:\s*strict", readme_text):
-        allow()  # advisory / 缺省 → 放行
+    if not re.search(r"(?m)^[ \t]*files_scope_enforcement:\s*strict", readme_text):
+        allow()  # advisory / 缺省 → 放行（行首锚定，避免正文/示例里的字符串误触发，P3-5 fix）
 
     agent_md = os.path.join(project_root, ".claude", "agents", f"{agent_type}.md")
     try:
