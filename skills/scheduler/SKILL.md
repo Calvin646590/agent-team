@@ -105,11 +105,12 @@ while 存在 pending 或 in_progress 的子任务:
                   {project_dir}/ {fork_dir}/
             # 若有上游产物（depends_on 的 outputs），步骤 4 已 sync，此处不重复
         elif context.kind == "office":
-            # none：写前快照（ADR-0029）
-            snapshot_dir = ".agent-team/snapshots/<task.id>-<timestamp>/"
-            mkdir -p {snapshot_dir}
-            # 只快照 task 的 files_scope.write 覆盖的文件（从 agent md 读取）
-            # 大文件（>50MB）只记 hash+路径，不实拷贝（ADR-0029）
+            # none：写前快照由**真实 hook 自动完成**（ADR-0029 / 诚实复审 item 6）。
+            # 不要在这里手写 mkdir/cp ——历史上 LLM 会跳过却谎报成功（空目录+伪造时间戳）。
+            # hooks/office-snapshot-guard.py 在每次 Write/Edit 前自动把"即将被覆盖的、
+            # 已存在的"文件拷进 .agent-team/snapshots/<session>/ 并记真实时间戳，无需你介入。
+            # 新建文件无前态、不快照（这是正确行为）。你这里 pass 即可。
+            pass
 
     # ── 构造并派发 Agent 工具调用 ──
     对 ready 中每个任务，构造 Agent 工具调用：

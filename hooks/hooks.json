@@ -1,10 +1,14 @@
 {
-  "description": "agent-team hooks: enforce files-scope on write operations",
+  "description": "agent-team hooks: (1) strict files-scope 强制；(2) office 写前快照（真实代码化，非 prompt 剧场）",
   "hooks": {
     "PreToolUse": [
       {
         "matcher": "Write|Edit|NotebookEdit",
         "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/office-snapshot-guard.py"
+          },
           {
             "type": "command",
             "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/files-scope-guard.py"
